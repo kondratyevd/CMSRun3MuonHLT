@@ -40,7 +40,7 @@
 #include <string>
 #include <iomanip>
 #include "TTree.h"
-#include "MuonHLTNtuples/Analyzers/src/MuonTree.h"
+#include "CMSRun3MuonHLT/Analyzers/src/MuonTree.h"
 #include "DataFormats/MuonReco/interface/MuonTrackLinks.h"
 #include "DataFormats/TrackerRecHit2D/interface/BaseTrackerRecHit.h"
 #include "DataFormats/TrackingRecHit/interface/TrackingRecHit.h"

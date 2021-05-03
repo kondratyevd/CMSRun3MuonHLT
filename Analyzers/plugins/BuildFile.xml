@@ -17,8 +17,8 @@
 <use name="MagneticField/Records"/>
 
 
-<library name="MuonHLTNtuplesAnalyzersPlugin" file="*.cc">
-   <use name="MuonHLTNtuples/Analyzers"/>
+<library name="CMSRun3MuonHLTAnalyzersPlugin" file="*.cc">
+   <use name="CMSRun3MuonHLT/Analyzers"/>
    <use name="root"/>
    <use name="rootminuit"/>
    <use name="clhep"/>

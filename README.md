@@ -12,7 +12,7 @@ cmsenv
 git cms-init
 git cms-addpkg RecoMuon/TrackerSeedGenerator
 
-git clone https://github.com/kondratyevd/CMSRun3MuonHLT
+git clone git@github.com:kondratyevd/CMSRun3MuonHLT.git
 
 cp -r CMSRun3MuonHLT/TSG/* RecoMuon/TrackerSeedGenerator/plugins/
 
