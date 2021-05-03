@@ -22,9 +22,11 @@ scram b -j 10
 ### Configs
 Located under `CMSRun3MuonHLT/Tools/`. 
 
+When running over CRAB, use AODSIM datasets and `useParent=True`.
+
 ```shell
 # Configs
-HLTCfg2018MC_Mu_test.py
+HLTCfg2018MC_Mu.py
 ```
 
 
