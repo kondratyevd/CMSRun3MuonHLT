@@ -5304,6 +5304,31 @@ process.trackerTopology = cms.ESProducer( "TrackerTopologyEP",
   appendToDataLabel = cms.string( "" )
 )
 
+process.FastTimerService = cms.Service( "FastTimerService",
+    dqmPath = cms.untracked.string( "HLT/TimerService" ),
+    dqmModuleTimeRange = cms.untracked.double( 40.0 ),
+    enableDQMbyPath = cms.untracked.bool( False ),
+    dqmModuleTimeResolution = cms.untracked.double( 0.2 ),
+    dqmPathMemoryResolution = cms.untracked.double( 5000.0 ),
+    enableDQM = cms.untracked.bool( True ),
+    enableDQMbyModule = cms.untracked.bool( False ),
+    dqmModuleMemoryRange = cms.untracked.double( 100000.0 ),
+    dqmMemoryResolution = cms.untracked.double( 5000.0 ),
+    enableDQMbyLumiSection = cms.untracked.bool( True ),
+    dqmPathTimeResolution = cms.untracked.double( 0.5 ),
+    printEventSummary = cms.untracked.bool( False ),
+    dqmPathTimeRange = cms.untracked.double( 100.0 ),
+    dqmTimeRange = cms.untracked.double( 2000.0 ),
+    enableDQMTransitions = cms.untracked.bool( False ),
+    dqmLumiSectionsRange = cms.untracked.uint32( 2500 ),
+    dqmPathMemoryRange = cms.untracked.double( 1000000.0 ),
+    dqmMemoryRange = cms.untracked.double( 1000000.0 ),
+    dqmTimeResolution = cms.untracked.double( 5.0 ),
+    printRunSummary = cms.untracked.bool( True ),
+    dqmModuleMemoryResolution = cms.untracked.double( 500.0 ),
+    printJobSummary = cms.untracked.bool( True ),
+    enableDQMbyProcesses = cms.untracked.bool( True )
+)
 process.MessageLogger = cms.Service( "MessageLogger",
     suppressInfo = cms.untracked.vstring(  ),
     debugs = cms.untracked.PSet( 
@@ -5410,6 +5435,11 @@ process.MessageLogger = cms.Service( "MessageLogger",
       'hltPFJetCtfWithMaterialTracks',
       'hltL3TkTracksFromL2IOHit',
       'hltL3TkTracksFromL2OIHit' )
+)
+process.ThroughputService = cms.Service( "ThroughputService",
+    dqmPath = cms.untracked.string( "HLT/Throughput" ),
+    timeRange = cms.untracked.double( 60000.0 ),
+    timeResolution = cms.untracked.double( 5.828 )
 )
 
 process.hltGetConditions = cms.EDAnalyzer( "EventSetupRecordDataGetter",
@@ -6071,7 +6101,7 @@ process.hltSiStripRawToClustersFacility = cms.EDProducer( "SiStripClusterizerFro
       clusterChargeCut = cms.PSet(  refToPSet_ = cms.string( "HLTSiStripClusterChargeCutNone" ) ),
       MaxSequentialBad = cms.uint32( 1 )
     ),
-    onDemand = cms.bool( True )
+    onDemand = cms.bool( False )
 )
 process.hltSiStripClusters = cms.EDProducer( "MeasurementTrackerEventProducer",
     inactivePixelDetectorLabels = cms.VInputTag( 'hltSiPixelDigis' ),
@@ -6086,44 +6116,53 @@ process.hltSiStripClusters = cms.EDProducer( "MeasurementTrackerEventProducer",
     stripClusterProducer = cms.string( "hltSiStripRawToClustersFacility" )
 )
 process.hltIterL3OISeedsFromL2Muons = cms.EDProducer( "TSGForOIFromL2",
-    hitsToTry = cms.int32( 1 ),
-    tsosDiff2 = cms.double( 0.02 ),
-    adjustErrorsDynamicallyForHitless = cms.bool( True ),
-    SF6 = cms.double( 2.0 ),
-    SF4 = cms.double( 7.0 ),
-    SF5 = cms.double( 10.0 ),
-    propagatorName = cms.string( "PropagatorWithMaterialParabolicMf" ),
-    SF3 = cms.double( 5.0 ),
-    SF1 = cms.double( 3.0 ),
-    minEtaForTEC = cms.double( 0.7 ),
-    fixedErrorRescaleFactorForHits = cms.double( 1.0 ),
-    maxSeeds = cms.uint32( 20 ),
-    maxEtaForTOB = cms.double( 1.8 ),
-    pT3 = cms.double( 70.0 ),
-    pT2 = cms.double( 30.0 ),
-    pT1 = cms.double( 13.0 ),
-    layersToTry = cms.int32( 2 ),
-    fixedErrorRescaleFactorForHitless = cms.double( 2.0 ),
-    MeasurementTrackerEvent = cms.InputTag( "hltSiStripClusters" ),
-    SF2 = cms.double( 4.0 ),
-    numL2ValidHitsCutAllEta = cms.uint32( 20 ),
-    adjustErrorsDynamicallyForHits = cms.bool( False ),
-    eta4 = cms.double( 1.2 ),
-    src = cms.InputTag( 'hltL2Muons','UpdatedAtVtx' ),
-    eta6 = cms.double( 1.4 ),
-    eta7 = cms.double( 2.1 ),
-    eta1 = cms.double( 0.2 ),
-    eta2 = cms.double( 0.3 ),
-    eta3 = cms.double( 1.0 ),
-    UseHitLessSeeds = cms.bool( True ),
-    estimator = cms.string( "hltESPChi2MeasurementEstimator100" ),
-    numL2ValidHitsCutAllEndcap = cms.uint32( 30 ),
-    debug = cms.untracked.bool( False ),
-    maxHitSeeds = cms.uint32( 1 ),
-    eta5 = cms.double( 1.6 ),
-    tsosDiff1 = cms.double( 0.2 ),
-    maxHitlessSeeds = cms.uint32( 5 )
+        MeasurementTrackerEvent = cms.InputTag("hltSiStripClusters"),
+        SF1 = cms.double(3.0),
+        SF2 = cms.double(4.0),
+        SF3 = cms.double(5.0),
+        SF4 = cms.double(7.0),
+        SF5 = cms.double(10.0),
+        SF6 = cms.double(2.0),
+        UseHitLessSeeds = cms.bool(True),
+        adjustErrorsDynamicallyForHitless = cms.bool(True), # default True
+        adjustErrorsDynamicallyForHits = cms.bool(False),
+        debug = cms.untracked.bool(False),
+        estimator = cms.string('hltESPChi2MeasurementEstimator100'),
+        eta1 = cms.double(0.2),
+        eta2 = cms.double(0.3),
+        eta3 = cms.double(1.0),
+        eta4 = cms.double(1.2),
+        eta5 = cms.double(1.6),
+        eta6 = cms.double(1.4),
+        eta7 = cms.double(2.1),
+        fixedErrorRescaleFactorForHitless = cms.double(2.0), # default 2.0
+        fixedErrorRescaleFactorForHits = cms.double(1.0),
+        hitsToTry = cms.int32(1),
+        layersToTry = cms.int32(2),
+        maxEtaForTOB = cms.double(1.8),
+        maxHitDoubletSeeds = cms.uint32(0), # default 0
+        maxHitSeeds = cms.uint32(1), # default 1
+        maxHitlessSeedsIP = cms.uint32(5), # default 5
+        maxHitlessSeedsMuS = cms.uint32(0), # default 0
+        useBothAsInRun2 = cms.bool(True), # default True
+        dontCreateHitbasedInBarrelAsInRun2 = cms.bool(True), # default True
+        maxSeeds = cms.uint32(20),
+        minEtaForTEC = cms.double(0.7),
+        numL2ValidHitsCutAllEndcap = cms.uint32(30),
+        numL2ValidHitsCutAllEta = cms.uint32(20),
+        pT1 = cms.double(13.0),
+        pT2 = cms.double(30.0),
+        pT3 = cms.double(70.0),
+        propagatorName = cms.string('PropagatorWithMaterialParabolicMf'),
+        src = cms.InputTag("hltL2Muons","UpdatedAtVtx"),
+        tsosDiff1 = cms.double(0.2),
+        tsosDiff2 = cms.double(0.02),
 )
+
+#process.hltIterL3OISeedCandidates = cms.EDProducer("SeedCandidateProducer",
+#    src=cms.InputTag( "hltIterL3OISeedsFromL2Muons" )
+#)
+
 process.hltIterL3OITrackCandidates = cms.EDProducer( "CkfTrackCandidateMaker",
     src = cms.InputTag( "hltIterL3OISeedsFromL2Muons" ),
     maxSeedsBeforeCleaning = cms.uint32( 5000 ),
@@ -12243,6 +12282,9 @@ process.HLTL2muonrecoSequence = cms.Sequence( process.HLTL2muonrecoNocandSequenc
 process.HLTDoLocalPixelSequence = cms.Sequence( process.hltSiPixelDigis + process.hltSiPixelClusters + process.hltSiPixelClustersCache + process.hltSiPixelRecHits )
 process.HLTDoLocalStripSequence = cms.Sequence( process.hltSiStripExcludedFEDListProducer + process.hltSiStripRawToClustersFacility + process.hltSiStripClusters )
 process.HLTIterL3OImuonTkCandidateSequence = cms.Sequence( process.hltIterL3OISeedsFromL2Muons + process.hltIterL3OITrackCandidates + process.hltIterL3OIMuCtfWithMaterialTracks + process.hltIterL3OIMuonTrackCutClassifier + process.hltIterL3OIMuonTrackSelectionHighPurity + process.hltL3MuonsIterL3OI )
+
+#process.HLTIterL3OImuonTkCandidateSequence = cms.Sequence( process.hltIterL3OISeedsFromL2Muons + process.hltIterL3OISeedCandidates + process.hltIterL3OITrackCandidates + process.hltIterL3OIMuCtfWithMaterialTracks + process.hltIterL3OIMuonTrackCutClassifier + process.hltIterL3OIMuonTrackSelectionHighPurity + process.hltL3MuonsIterL3OI )
+
 process.HLTIterL3MuonRecoPixelTracksSequence = cms.Sequence( process.hltIterL3MuonPixelTracksFilter + process.hltIterL3MuonPixelTracksFitter + process.hltIterL3MuonPixelTracksTrackingRegions + process.hltIterL3MuonPixelLayerQuadruplets + process.hltIterL3MuonPixelTracksHitDoublets + process.hltIterL3MuonPixelTracksHitQuadruplets + process.hltIterL3MuonPixelTracks )
 process.HLTIterL3MuonRecopixelvertexingSequence = cms.Sequence( process.HLTIterL3MuonRecoPixelTracksSequence + process.hltIterL3MuonPixelVertices + process.hltIterL3MuonTrimmedPixelVertices )
 process.HLTIterativeTrackingIteration0ForIterL3Muon = cms.Sequence( process.hltIter0IterL3MuonPixelSeedsFromPixelTracks + process.hltIter0IterL3MuonCkfTrackCandidates + process.hltIter0IterL3MuonCtfWithMaterialTracks + process.hltIter0IterL3MuonTrackCutClassifier + process.hltIter0IterL3MuonTrackSelectionHighPurity )
@@ -12295,17 +12337,25 @@ process.HLT_OldMu100_v3 = cms.Path( process.HLTBeginSequence + process.hltL1sSin
 process.HLT_TkMu100_v2 = cms.Path( process.HLTBeginSequence + process.hltL1sSingleMu22or25 + process.hltPreTkMu100 + process.hltL1fL1sMu22or25L1Filtered0 + process.HLTMuonLocalRecoSequence + process.HLTHighPt50TrackerMuonSequence + process.hltL3fL1sMu25f0TkFiltered100Q + process.HLTEndSequence )
 process.HLTriggerFinalPath = cms.Path( process.hltGtStage2Digis + process.hltScalersRawToDigi + process.hltFEDSelector + process.hltTriggerSummaryAOD + process.hltTriggerSummaryRAW + process.hltBoolFalse )
 
+process.load("hlt_validation_cff")
 
-process.HLTSchedule = cms.Schedule( *(process.HLTriggerFirstPath, process.HLT_IsoMu24_v13, process.HLT_IsoMu27_v16, process.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8_v5, process.HLT_Mu50_v13, process.HLT_OldMu100_v3, process.HLT_TkMu100_v2, process.HLTriggerFinalPath ))
+process.HLTSchedule = cms.Schedule( *(process.HLTriggerFirstPath, process.HLT_IsoMu24_v13, process.HLT_IsoMu27_v16, process.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8_v5, process.HLT_Mu50_v13, process.HLT_OldMu100_v3, process.HLT_TkMu100_v2, process.HLTriggerFinalPath, 
+process.validation 
+))
 
 
 process.source = cms.Source( "PoolSource",
     fileNames = cms.untracked.vstring(
-        '/store/mc/RunIIAutumn18DR/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM-RAW/FlatPU28to62NZS_102X_upgrade2018_realistic_v15-v1/00000/EF00BD86-2DB3-3645-8521-A3F29E89440D.root',
+#        'file:/depot/cms/hmm/hlt/singleMu_noPU_recosim.root'
+#        '/store/mc/RunIIAutumn18DR/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM-RAW/FlatPU28to62NZS_102X_upgrade2018_realistic_v15-v1/00000/EF00BD86-2DB3-3645-8521-A3F29E89440D.root', 
+#        '/store/mc/RunIIAutumn18DR/DYJetsToMuMu_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM-DIGI-RAW/PUPoissonAve32_102X_upgrade2018_realistic_v15-v1/70000/0053E36B-36A3-144E-966E-8548DC9EAB1B.root',
+        '/store/mc/RunIIAutumn18DR/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM-RAW/FlatPU28to62NZS_102X_upgrade2018_realistic_v15-v1/00000/00457A85-B7F8-1841-80A0-0EF3E6070B38.root'
+#'/store/mc/RunIIAutumn18DR/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/AODSIM/FlatPU28to62NZS_102X_upgrade2018_realistic_v15-v1/00000/7FB8C4EB-B1C1-3442-B6B3-7B613D32E5A4.root'
     ),
     inputCommands = cms.untracked.vstring(
         'keep *'
-    )
+    ),
+
 )
 
 # run the Full L1T emulator, then repack the data into a new RAW collection, to be used by the HLT
@@ -12338,6 +12388,15 @@ if 'MessageLogger' in process.__dict__:
     process.MessageLogger.categories.append('FastReport')
 
 # load the DQMStore and DQMRootOutputModule
+process.load( "DQMServices.Core.DQMStore_cfi" )
+process.DQMStore.enableMultiThread = True
+
+process.dqmOutput = cms.OutputModule("DQMRootOutputModule",
+    fileName = cms.untracked.string("DQMIO.root")
+)
+
+process.DQMOutput = cms.EndPath( process.dqmOutput )
+
 # add specific customizations
 _customInfo = {}
 _customInfo['menuType'  ]= "GRun"
@@ -12347,9 +12406,13 @@ _customInfo['globalTags'][False] = "auto:run2_mc_GRun"
 _customInfo['inputFiles']={}
 _customInfo['inputFiles'][True]  = "file:RelVal_Raw_GRun_DATA.root"
 _customInfo['inputFiles'][False] = "file:RelVal_Raw_GRun_MC.root"
-_customInfo['maxEvents' ]=  100
+_customInfo['maxEvents' ]=  10000
 _customInfo['globalTag' ]= "102X_upgrade2018_realistic_v15"
-_customInfo['inputFile' ]=  ['/store/mc/RunIIAutumn18DR/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM-RAW/FlatPU28to62NZS_102X_upgrade2018_realistic_v15-v1/90003/F42845F0-E07B-7F43-BA78-F6FCBBCF61FC.root']
+#_customInfo['inputFile' ]=  ['/store/mc/RunIIAutumn18DR/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM-RAW/FlatPU28to62NZS_102X_upgrade2018_realistic_v15-v1/00000/EF00BD86-2DB3-3645-8521-A3F29E89440D.root']
+#_customInfo['inputFile' ]=['/store/mc/RunIIAutumn18DR/DYJetsToMuMu_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM-DIGI-RAW/PUPoissonAve32_102X_upgrade2018_realistic_v15-v1/70000/0053E36B-36A3-144E-966E-8548DC9EAB1B.root']
+_customInfo['inputFile' ]=['/store/mc/RunIIAutumn18DR/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM-RAW/FlatPU28to62NZS_102X_upgrade2018_realistic_v15-v1/00000/00457A85-B7F8-1841-80A0-0EF3E6070B38.root']
+#_customInfo['inputFile' ]=['file:/depot/cms/hmm/hlt/singleMu_noPU_recosim.root']
+#_customInfo['inputFile' ]=['/store/mc/RunIIAutumn18DR/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/AODSIM/FlatPU28to62NZS_102X_upgrade2018_realistic_v15-v1/00000/7FB8C4EB-B1C1-3442-B6B3-7B613D32E5A4.root']
 _customInfo['realData'  ]=  False
 from HLTrigger.Configuration.customizeHLTforALL import customizeHLTforAll
 process = customizeHLTforAll(process,"GRun",_customInfo)
@@ -12363,21 +12426,27 @@ modifyHLTforEras(process)
 
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 200
+process.MessageLogger.cerr.FwkReport.reportEvery = 1
 
 
-'''process.source = cms.Source( "PoolSource",
+process.source = cms.Source( "PoolSource",
 
- fileNames = cms.untracked.vstring('/store/mc/RunIIFall18DR/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM-RAW/FlatPU0to70_102X_upgrade2018_realistic_v11-v1/110008/D889B4ED-CDE8-7346-B041-A9A940F88155.root'),
+#fileNames = cms.untracked.vstring('/store/mc/RunIIAutumn18DR/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM-RAW/FlatPU28to62NZS_102X_upgrade2018_realistic_v15-v1/00000/EF00BD86-2DB3-3645-8521-A3F29E89440D.root'),
+#fileNames = cms.untracked.vstring('/store/mc/RunIIAutumn18DR/DYJetsToMuMu_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM-DIGI-RAW/PUPoissonAve32_102X_upgrade2018_realistic_v15-v1/70000/0053E36B-36A3-144E-966E-8548DC9EAB1B.root'),
+fileNames = cms.untracked.vstring('/store/mc/RunIIAutumn18DR/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM-RAW/FlatPU28to62NZS_102X_upgrade2018_realistic_v15-v1/00000/00457A85-B7F8-1841-80A0-0EF3E6070B38.root'),
+#fileNames = cms.untracked.vstring('file:/depot/cms/hmm/hlt/singleMu_noPU_recosim.root')
+#fileNames = cms.untracked.vstring('/store/mc/RunIIAutumn18DR/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/AODSIM/FlatPU28to62NZS_102X_upgrade2018_realistic_v15-v1/00000/7FB8C4EB-B1C1-3442-B6B3-7B613D32E5A4.root'),
+# fileNames = cms.untracked.vstring('/store/mc/RunIIFall18wmLHEGS/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM/102X_upgrade2018_realistic_v11-v1/110002/DC181D03-3D36-834E-BFC1-B43A9B0D8D4D.root'),
+                             
+#  secondaryFileNames=cms.untracked.vstring(
+#  '/store/mc/RunIIFall18wmLHEGS/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM/102X_upgrade2018_realistic_v11-v1/110002/DC181D03-3D36-834E-BFC1-B43A9B0D8D4D.root',
+#'/store/mc/RunIIFall18wmLHEGS/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM/102X_upgrade2018_realistic_v11-v1/110002/E1ABA16C-A87E-8247-984C-49CB38FF1ABC.root'
+                             #)
+                           )
 
-  secondaryFileNames=cms.untracked.vstring(
-  '/store/mc/RunIIFall18wmLHEGS/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM/102X_upgrade2018_realistic_v11-v1/110002/DC181D03-3D36-834E-BFC1-B43A9B0D8D4D.root',
-'/store/mc/RunIIFall18wmLHEGS/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM/102X_upgrade2018_realistic_v11-v1/110002/E1ABA16C-A87E-8247-984C-49CB38FF1ABC.root'
-
-)
-)'''
 
 
+'''
 process.source = cms.Source( "PoolSource",
 
  fileNames = cms.untracked.vstring('/store/mc/RunIIAutumn18DR/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/AODSIM/FlatPU28to62NZS_102X_upgrade2018_realistic_v15-v1/00001/5BA3BD2D-737C-3B44-9542-6A4ABBB2D54F.root'),
@@ -12390,10 +12459,33 @@ process.source = cms.Source( "PoolSource",
 )
 
 )
+'''
 
-
+if False: # switch pixels off
+    process.load("CondCore.CondDB.CondDB_cfi")
+    # input database (in this case local sqlite file)
+    process.CondDB.connect = 'frontier://FrontierProd/CMS_CONDITIONS'
+    #process.CondDB.connect = 'frontier://FrontierPrep/CMS_CONDITIONS'
+    process.SiPixelQualityDBReader = cms.ESSource("PoolDBESSource",
+        process.CondDB,
+        toGet = cms.VPSet(
+            cms.PSet(
+                record = cms.string('SiPixelQualityFromDbRcd'),
+                tag = cms.string('SiPixelQuality_Phase1FailureScenario_v00'),
+            )
+        )
+    )
+    process.es_prefer_Quality = cms.ESPrefer("PoolDBESSource","SiPixelQualityDBReader")
+    process.hltSiPixelDigis.UseQualityInfo=True
 
 from RecoMuon.TrackingTools.MuonServiceProxy_cff import *
+
+process.dump = cms.EDAnalyzer('EventContentAnalyzer')
+#process.MessageLogger = cms.Service("MessageLogger",
+#       debugModules = cms.untracked.vstring('MultiTrackValidator')
+#)
+
+#process.MessageLogger.debugModules = ['CkfPattern']
 
 
 process.muonNtuples = cms.EDAnalyzer("MuonNtuples",
@@ -12414,31 +12506,37 @@ process.muonNtuples = cms.EDAnalyzer("MuonNtuples",
                    L3IOMuCandidates         = cms.untracked.InputTag("hltIterL3IOFromL2MuonCandidates"),
                    MuonLinksTag = cms.untracked.InputTag("hltIterL3MuonsFromL2LinksCombination"),
                    globalMuons = cms.InputTag("globalMuons"),
-                   theTrackOI               = cms.untracked.InputTag("hltIterL3OIMuonTrackSelectionHighPurity"),
+                   #theTrackOI               = cms.untracked.InputTag("hltIterL3OIMuonTrackSelectionHighPurity"),
+                   theTrackOI               = cms.untracked.InputTag("hltIterL3OIMuCtfWithMaterialTracks"),
                    theTrackIOL2             = cms.untracked.InputTag("hltIter3IterL3MuonMerged"),
                    theTrackIOL1             = cms.untracked.InputTag("hltIter3IterL3FromL1MuonMerged"),
                    l3filterLabel    = cms.string("hltL3fL1sMu22Or25L1f0L2f10QL3Filtered27Q"),
                    lumiScalerTag            = cms.untracked.InputTag("scalersRawToDigi"),
                    puInfoTag                = cms.untracked.InputTag("addPileupInfo"),
                    genParticlesTag          = cms.untracked.InputTag("genParticles"),
-                   doOffline                = cms.untracked.bool(True)
+                   doOffline                = cms.untracked.bool(True),
+                   seedsForOIFromL2         = cms.InputTag("hltIterL3OISeedsFromL2Muons"),
+                   theTrajOI                = cms.untracked.InputTag("hltIterL3OITrackCandidates"),
+                   simTracks            = cms.untracked.InputTag("mix","MergedTrackTruth", "HLT"), 
+                   propagatorName       = cms.string('PropagatorWithMaterialParabolicMf'),
 )
 
 
 
 process.TFileService = cms.Service("TFileService",
-                               fileName = cms.string("muonNtuple.root"),
+                               fileName = cms.string("muonNtuple_test_MC.root"),
                                closeFileFast = cms.untracked.bool(False)
 )
 process.HLTValidation = cms.EndPath(
     process.muonNtuples
+    #* process.dump
 )
 
-process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(False) )
+process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(False), SkipEvent = cms.untracked.vstring('ProductNotFound') )
 process.options.allowUnscheduled = cms.untracked.bool(True)
 
 
-
+#print process.dumpPython()
 
 
 
