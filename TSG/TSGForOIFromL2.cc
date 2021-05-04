@@ -539,149 +539,147 @@ void TSGForOIFromL2::makeSeedsFromHitDoublets(const GeometricSearchDet& layer,
                                        unsigned int& numSeedsMade,
                                        unsigned int& layerCount,
                                        std::vector<TrajectorySeed>& out) const {
-  bool print = false;
-  if (layerCount > numOfLayersToTry_) {
-      if (print) { std::cout << "  Abort because layerCount > numOfLayersToTry_" << std::endl;}
-      return;
-  }
 
+  // This method is similar to makeSeedsFromHits, but the seed is created
+  // only when in addition to a hit on a given layer, there are more compatible hits
+  // on next layers (going from outside inwards), compatible with updated TSOS.
+  // If that's the case, multiple compatible hits are used to create a single seed.
+
+  // Configured to only check the immideately adjacent layer and add one more hit
+  int max_addtnl_layers = 1; // max number of additional layers to scan
+  int max_meas = 1; // number of measurements to consider on each additional layer
+
+  // // // First, regular procedure to find a compatible hit - like in makeSeedsFromHits // // //
+  
   // Error Rescaling
   TrajectoryStateOnSurface onLayer(tsos);
   onLayer.rescaleError(errorSF);
 
+  // Find dets compatible with original TSOS
   std::vector< GeometricSearchDet::DetWithState > dets;
   layer.compatibleDetsV(onLayer, propagatorAlong, *estimator, dets);
 
-  // Find Measurements on each DetWithState
-  LogTrace("TSGForOIFromL2") << "TSGForOIFromL2::makeSeedsFromHits: Find measurements on each detWithState  " << dets.size() << std::endl;
+  LogTrace("TSGForOIFromL2") << "TSGForOIFromL2::makeSeedsFromHitDoublets: Find measurements on each detWithState  " << dets.size() << std::endl;
   std::vector<TrajectoryMeasurement> meas;
+    
+  // Loop over dets
   for (std::vector<GeometricSearchDet::DetWithState>::iterator idet=dets.begin(); idet!=dets.end(); ++idet) {
     MeasurementDetWithData det = measurementTracker->idToDet(idet->first->geographicalId());
-    if (det.isNull()) {
-        if (print) { std::cout << "  Abort because det.isNull()" << std::endl;}
-        continue;
-    }
-    if (!idet->second.isValid()) {
-        if (print) { std::cout << "  Abort because !it->second.isValid()" << std::endl;}
-        continue;	// Skip if TSOS is not valid
-    }
 
+    if (det.isNull()) continue;    // skip if det does not exist
+    if (!idet->second.isValid()) continue;    // skip if TSOS is invalid
+
+    // Find measurements on this det
     std::vector <TrajectoryMeasurement> mymeas = det.fastMeasurements(idet->second, onLayer, propagatorAlong, *estimator);
     
     // Save valid measurements 
     for (std::vector<TrajectoryMeasurement>::const_iterator imea = mymeas.begin(), ed2 = mymeas.end(); imea != ed2; ++imea) {
       if (imea->recHit()->isValid()) meas.push_back(*imea);
-    }
-  }
-    LogTrace("TSGForOIFromL2") << "TSGForOIFromL2::makeSeedsFromHits: Update TSOS using TMs after sorting, then create Trajectory Seed, number of TM = " << meas.size() << std::endl;
+    } // end loop over meas
+  } // end loop over dets
+
+  LogTrace("TSGForOIFromL2") << "TSGForOIFromL2::makeSeedsFromHitDoublets: Update TSOS using TMs after sorting, then create Trajectory Seed, number of TM = " << meas.size() << std::endl;
   
-  // sort valid measurements found on first layer
+  // sort valid measurements found on the first layer
   std::sort(meas.begin(), meas.end(), TrajMeasLessEstim());
 
   unsigned int found = 0;
   int hit_num = 0;
   
-  // Loop over measurements on this det
+  // Loop over all valid measurements compatible with original TSOS
   for (std::vector<TrajectoryMeasurement>::const_iterator mea=meas.begin(); mea!=meas.end(); ++mea) {
     hit_num++;
     
-    // Update TSOS with measurement on first layer
+    // Update TSOS with measurement on first considered layer
     TrajectoryStateOnSurface updatedTSOS = updator_->update(mea->forwardPredictedState(), *mea->recHit());
+
     LogTrace("TSGForOIFromL2") << "TSGForOIFromL2::makeSeedsFromHitDoublets: TSOS for TM " << found << std::endl;
-    if (not updatedTSOS.isValid()) {
-        if (print) { std::cout << "  Abort because not updatedTSOS.isValid()" << std::endl;}
-        continue;
-    }
+    if (not updatedTSOS.isValid()) continue;    // Skip if updated TSOS is invalid
+
     edm::OwnVector<TrackingRecHit> seedHits;
       
     // Save hit on first layer
     seedHits.push_back(*mea->recHit()->hit());
-    if (print) { std::cout << "  Considering hit #"<< hit_num << std::endl;}
     const DetLayer* detLayer = dynamic_cast<const DetLayer*>(&layer);
 
-    // now look for the hits on the next layer and try to update the trajectory
-    auto const& compLayers = (*navSchool).nextLayers(*detLayer, *updatedTSOS.freeState(), alongMomentum);
-    int nnextlayers=0;
-    int max_nnextlayers=1; // number of compatible layers to loop over
-    int max_meas=1; // number of measurements to consider on each layer
-    int found_compatible_on_next_layer = 0;
 
+    // // // Now for this measurement we will loop over additional layers and try to update the TSOS again // // //
+
+    // find layers compatible with updated TSOS
+    auto const& compLayers = (*navSchool).nextLayers(*detLayer, *updatedTSOS.freeState(), alongMomentum);
+
+    int addtnl_layers_scanned=0;
+    int found_compatible_on_next_layer = 0;
     int det_id = 0;
+      
+    // Copy updated TSOS - we will update it again with a measurement from the next layer, if we find it
     TrajectoryStateOnSurface updatedTSOS_next(updatedTSOS);
 
-    // loop over compatible layers
+    // loop over layers compatible with updated TSOS
     for (auto compLayer : compLayers) {
-      if (print) { std::cout << "    Looking for compatible hit on next layer " << std::endl;}
       int nmeas=0;
-      if (nnextlayers>=max_nnextlayers) {
-          if (print) { std::cout << "    Abort because nnextlayers>=max_nnextlayers" << std::endl;}
-          break;
-      }
-      if (found_compatible_on_next_layer>0) {
-          if (print) { std::cout << "    Abort because found_compatible_on_next_layer>0" << std::endl;}
-          break;
-      }
-      // find DetWithState on the next layer
+
+      if (addtnl_layers_scanned>=max_addtnl_layers) break;    // break if we already looped over enough layers
+      if (found_compatible_on_next_layer>0) break;    // break if we already found additional hit
+
+      // find dets compatible with updated TSOS
       std::vector< GeometricSearchDet::DetWithState > dets_next;
       TrajectoryStateOnSurface onLayer_next(updatedTSOS);
       onLayer_next.rescaleError(errorSF);//errorSF
       compLayer->compatibleDetsV(onLayer_next, propagatorAlong, *estimator, dets_next);
+
       //if (!detWithState.size()) continue;
       std::vector<TrajectoryMeasurement> meas_next;
       
-      // find measurements on that det and save the valid ones
+      // find measurements on dets_next and save the valid ones
       for (std::vector<GeometricSearchDet::DetWithState>::iterator idet_next=dets_next.begin(); idet_next!=dets_next.end(); ++idet_next) {
         MeasurementDetWithData det = measurementTracker->idToDet(idet_next->first->geographicalId());
-        if (det.isNull()) {
-            if (print) { std::cout << "    Abort because det.isNull() when scanning next layer" << std::endl;}
-            continue;
-        }
-        if (!idet_next->second.isValid()) {
-            if (print) { std::cout << "    Abort because !idet_next->second.isValid() when scanning next layer" << std::endl;}
-            continue;
-        }
+
+        if (det.isNull()) continue;    // skip if det does not exist
+        if (!idet_next->second.isValid()) continue;    // skip if TSOS is invalid
+
+        // Find measurements on this det
         std::vector <TrajectoryMeasurement>mymeas_next=det.fastMeasurements(idet_next->second, onLayer_next, propagatorAlong, *estimator);
-        for (std::vector<TrajectoryMeasurement>::const_iterator imea_next=mymeas_next.begin(), ed2=mymeas_next.end(); imea_next != ed2;++imea_next) {
+
+        for (std::vector<TrajectoryMeasurement>::const_iterator imea_next=mymeas_next.begin(), ed2=mymeas_next.end(); imea_next != ed2; ++imea_next) {
+            
+          // save valid measurements
           if (imea_next->recHit()->isValid()) meas_next.push_back(*imea_next);
-        } // loop over mymeas
-      } // loop over dets_next
 
-    // sort valid measurements found on this layer
-    std::sort(meas_next.begin(), meas_next.end(), TrajMeasLessEstim());
+        }    // end loop over mymeas_next
+      }    // end loop over dets_next
+
+      // sort valid measurements found on this layer
+      std::sort(meas_next.begin(), meas_next.end(), TrajMeasLessEstim());
         
-    // loop over valid measurements on this layer
-    for (std::vector<TrajectoryMeasurement>::const_iterator mea_next=meas_next.begin(); mea_next!=meas_next.end(); ++mea_next) {
-      if (nmeas>=max_meas) {
-          if (print) { std::cout << "    Abort because nmeas>=max_meas" << std::endl;}
-          break;
-      }
+      // loop over valid measurements compatible with updated TSOS (TSOS updated with a hit on the first layer)
+      for (std::vector<TrajectoryMeasurement>::const_iterator mea_next=meas_next.begin(); mea_next!=meas_next.end(); ++mea_next) {
+
+        if (nmeas>=max_meas) break;    // skip if we already found enough hits
         
-      // try to update TSOS
-      updatedTSOS_next = updator_->update(mea_next->forwardPredictedState(), *mea_next->recHit());
-      if (not updatedTSOS_next.isValid()) {
-          if (print) { std::cout << "    Abort because not updatedTSOS_next.isValid() when scanning next layer" << std::endl;}
-          continue;
-      }
-      if (print) { std::cout << "    Adding a hit on this layer!" << std::endl;}
-      // If there was a compatible hit on this layer, we end up here
-      seedHits.push_back(*mea_next->recHit()->hit());
-      det_id = mea_next->recHit()->geographicalId().rawId();
-      nmeas++;
-      found_compatible_on_next_layer++;
-    } // end loop over meas_next
-    nnextlayers++;    
+        // try to update TSOS again, with an additional hit
+        updatedTSOS_next = updator_->update(mea_next->forwardPredictedState(), *mea_next->recHit());
+        
+        if (not updatedTSOS_next.isValid()) continue;    // skip if TSOS updated with additional hit is not valid
 
-    } // end loop over compatible layers
+        // If there was a compatible hit on this layer, we end up here.
+        // An additional compatible hit is saved.
+        seedHits.push_back(*mea_next->recHit()->hit());
+        det_id = mea_next->recHit()->geographicalId().rawId();
+        nmeas++;
+        found_compatible_on_next_layer++;
 
-    if (found_compatible_on_next_layer==0) {
-        if (print) { std::cout << "    Abort because no compatible hits on next layer" << std::endl;}
-        continue;
-    }
+      } // end loop over meas_next
 
-    // only consider the hit if there was a compatible hit on the next layer
+    addtnl_layers_scanned++;    
 
+    } // end loop over compLayers (additional layers scanned after the original layer)
+
+    if (found_compatible_on_next_layer==0) continue;
+    // only consider the hit if there was a compatible hit on one of the additional scanned layers
+
+    // Create a seed from two saved hits
     PTrajectoryStateOnDet const& pstate = trajectoryStateTransform::persistentState(updatedTSOS_next, det_id);
-    if (print) std::cout << "  Success! Creating a seed from " << seedHits.size() << " hits..." << std::endl;
     TrajectorySeed seed(pstate, std::move(seedHits), oppositeToMomentum);
 
     LogTrace("TSGForOIFromL2") << "TSGForOIFromL2::makeSeedsFromHitDoublets: Number of seedHits: " << seedHits.size() << std::endl;
@@ -690,24 +688,16 @@ void TSGForOIFromL2::makeSeedsFromHitDoublets(const GeometricSearchDet& layer,
     found++;
     numSeedsMade++;
     hitDoubletSeedsMade++;
-    if (found == numOfHitsToTry_) {
-        if (print) { std::cout << "  Abort because found enough hits (" << found << ")" << std::endl;}
-        break;
-    }
-    if (hitDoubletSeedsMade > maxHitDoubletSeeds_) {
-        if (print) { std::cout << "  Abort because hitDoubletSeedsMade > maxHitDoubletSeeds_" << std::endl;}
-        return;
-    }
-  }
- 
-  if (found) {
+
+    if (found == numOfHitsToTry_) break;    // break if enough measurements scanned
+    if (hitDoubletSeedsMade > maxHitDoubletSeeds_) return;    // abort if enough seeds created
+
+  } // end loop over measurements compatible with original TSOS
+
+  if (found)
       layerCount++;
-  } else {
-      if (print) { std::cout << "  No good hits! No seeds created on this layer." << std::endl;}
-  }
 
 }
-
 
 
 //
