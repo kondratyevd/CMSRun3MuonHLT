@@ -7167,6 +7167,21 @@ process.hltL3MuonsIterL3IO = cms.EDProducer( "L3MuonProducer",
     ),
     MuonCollectionLabel = cms.InputTag( 'hltL2Muons','UpdatedAtVtx' )
 )
+
+###
+process.hltIterL3IOFromL2MuonsLinksCombination = cms.EDProducer( "L3TrackLinksCombiner",
+    labels = cms.VInputTag( 'hltL3MuonsIterL3IO' )
+)
+process.hltIterL3IOFromL2Muons = cms.EDProducer( "L3TrackCombiner",
+    labels = cms.VInputTag( 'hltL3MuonsIterL3IO' )
+)
+process.hltIterL3IOFromL2MuonCandidates = cms.EDProducer( "L3MuonCandidateProducer",
+    InputLinksObjects = cms.InputTag( "hltIterL3IOFromL2MuonsLinksCombination" ),
+    InputObjects = cms.InputTag( "hltIterL3IOFromL2Muons" ),
+    MuonPtOption = cms.string( "Tracker" )
+)
+###
+
 process.hltIterL3MuonsFromL2LinksCombination = cms.EDProducer( "L3TrackLinksCombiner",
     labels = cms.VInputTag( 'hltL3MuonsIterL3OI','hltL3MuonsIterL3IO' )
 )
@@ -12292,7 +12307,7 @@ process.HLTIterativeTrackingIteration2ForIterL3Muon = cms.Sequence( process.hltI
 process.HLTIterativeTrackingIteration3ForIterL3Muon = cms.Sequence( process.hltIter3IterL3MuonClustersRefRemoval + process.hltIter3IterL3MuonMaskedMeasurementTrackerEvent + process.hltIter3IterL3MuonPixelLayerPairs + process.hltIter3IterL3MuonL2Candidates + process.hltIter3IterL3MuonTrackingRegions + process.hltIter3IterL3MuonPixelClusterCheck + process.hltIter3IterL3MuonPixelHitDoublets + process.hltIter3IterL3MuonPixelSeeds + process.hltIter3IterL3MuonCkfTrackCandidates + process.hltIter3IterL3MuonCtfWithMaterialTracks + process.hltIter3IterL3MuonTrackCutClassifier + process.hltIter3IterL3MuonTrackSelectionHighPurity )
 process.HLTIterativeTrackingIter023ForIterL3Muon = cms.Sequence( process.HLTIterativeTrackingIteration0ForIterL3Muon + process.HLTIterativeTrackingIteration2ForIterL3Muon + process.hltIter2IterL3MuonMerged + process.HLTIterativeTrackingIteration3ForIterL3Muon + process.hltIter3IterL3MuonMerged )
 process.HLTIterL3IOmuonTkCandidateSequence = cms.Sequence( process.HLTIterL3MuonRecopixelvertexingSequence + process.HLTIterativeTrackingIter023ForIterL3Muon + process.hltL3MuonsIterL3IO )
-process.HLTIterL3OIAndIOFromL2muonTkCandidateSequence = cms.Sequence( process.HLTIterL3OImuonTkCandidateSequence + process.hltIterL3OIL3MuonsLinksCombination + process.hltIterL3OIL3Muons + process.hltIterL3OIL3MuonCandidates + process.hltL2SelectorForL3IO + process.HLTIterL3IOmuonTkCandidateSequence + process.hltIterL3MuonsFromL2LinksCombination )
+process.HLTIterL3OIAndIOFromL2muonTkCandidateSequence = cms.Sequence( process.HLTIterL3OImuonTkCandidateSequence + process.hltIterL3OIL3MuonsLinksCombination + process.hltIterL3OIL3Muons + process.hltIterL3OIL3MuonCandidates + process.hltL2SelectorForL3IO + process.HLTIterL3IOmuonTkCandidateSequence + process.hltIterL3MuonsFromL2LinksCombination + process.hltIterL3IOFromL2MuonsLinksCombination + process.hltIterL3IOFromL2Muons + process.hltIterL3IOFromL2MuonCandidates)
 process.HLTRecoPixelTracksSequenceForIterL3FromL1Muon = cms.Sequence( process.hltIterL3FromL1MuonPixelTracksTrackingRegions + process.hltIterL3FromL1MuonPixelLayerQuadruplets + process.hltIterL3FromL1MuonPixelTracksHitDoublets + process.hltIterL3FromL1MuonPixelTracksHitQuadruplets + process.hltIterL3FromL1MuonPixelTracks )
 process.HLTRecopixelvertexingSequenceForIterL3FromL1Muon = cms.Sequence( process.HLTRecoPixelTracksSequenceForIterL3FromL1Muon + process.hltIterL3FromL1MuonPixelVertices + process.hltIterL3FromL1MuonTrimmedPixelVertices )
 process.HLTIterativeTrackingIteration0ForIterL3FromL1Muon = cms.Sequence( process.hltIter0IterL3FromL1MuonPixelSeedsFromPixelTracks + process.hltIter0IterL3FromL1MuonCkfTrackCandidates + process.hltIter0IterL3FromL1MuonCtfWithMaterialTracks + process.hltIter0IterL3FromL1MuonTrackCutClassifier + process.hltIter0IterL3FromL1MuonTrackSelectionHighPurity )
@@ -12347,7 +12362,7 @@ process.validation
 process.source = cms.Source( "PoolSource",
     fileNames = cms.untracked.vstring(
 #        'file:/depot/cms/hmm/hlt/singleMu_noPU_recosim.root'
-#        '/store/mc/RunIIAutumn18DR/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM-RAW/FlatPU28to62NZS_102X_upgrade2018_realistic_v15-v1/00000/EF00BD86-2DB3-3645-8521-A3F29E89440D.root', 
+#        '/store/mc/RunIIAutumn18DR/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM-RAW/FlatPU28to62NZS_102X_upgrade2018_realistic_v15-v1/00000/EF00BD86-2DB3-3645-8521-A3F29E89440D.root',
 #        '/store/mc/RunIIAutumn18DR/DYJetsToMuMu_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM-DIGI-RAW/PUPoissonAve32_102X_upgrade2018_realistic_v15-v1/70000/0053E36B-36A3-144E-966E-8548DC9EAB1B.root',
         '/store/mc/RunIIAutumn18DR/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/GEN-SIM-RAW/FlatPU28to62NZS_102X_upgrade2018_realistic_v15-v1/00000/00457A85-B7F8-1841-80A0-0EF3E6070B38.root'
 #'/store/mc/RunIIAutumn18DR/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/AODSIM/FlatPU28to62NZS_102X_upgrade2018_realistic_v15-v1/00000/7FB8C4EB-B1C1-3442-B6B3-7B613D32E5A4.root'
