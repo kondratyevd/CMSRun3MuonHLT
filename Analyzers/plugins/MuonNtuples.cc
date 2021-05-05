@@ -493,6 +493,7 @@ void MuonNtuples::analyze (const edm::Event &event, const edm::EventSetup &event
 //    edm::LogWarning("") << "Online OI muon collection not found !!!"; 
 
   edm::Handle<reco::RecoChargedCandidateCollection> l3IOcands;
+  event.getByToken(l3IOcandToken_, l3IOcands);
   if (event.getByToken(l3IOcandToken_, l3IOcands))
     fillHltMuons(l3IOcands, event, HLTCollectionType::iL3IOmuons, eventSetup);
 //  else
