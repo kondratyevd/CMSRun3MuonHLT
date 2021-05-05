@@ -27,7 +27,7 @@ When running over CRAB, use AODSIM datasets and `useParent=True`.
 ```shell
 # Configs
 HLTCfg2018MC_Mu.py        # IOFromL2 runs on muons that fail OI
-HLTCfg2018MC_Mu_IOorOI.py # IO runs independently from OI
+HLTCfg2018MC_Mu_IOorOI.py # IOFromL2 runs independently from OI
 ```
 
 
